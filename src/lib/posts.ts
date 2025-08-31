@@ -163,3 +163,66 @@ export function getCategories(): string[] {
   
   return Array.from(categories)
 }
+
+export interface TreeNode {
+  name: string
+  path: string
+  type: 'folder' | 'file'
+  children?: TreeNode[]
+  slug?: string
+}
+
+export function getPostsTree(): TreeNode[] {
+  const postPaths = getAllPostPaths()
+  const tree: TreeNode[] = []
+  
+  for (const { relativePath, fileName } of postPaths) {
+    const pathParts = relativePath.split('/').filter(Boolean)
+    const fileNameWithoutExt = fileName.replace(/\.md$/, '')
+    
+    let currentLevel = tree
+    let currentPath = ''
+    
+    // 폴더 구조 생성
+    for (let i = 0; i < pathParts.length; i++) {
+      const part = pathParts[i]
+      currentPath += (currentPath ? '/' : '') + part
+      
+      let existingNode = currentLevel.find(node => node.name === part)
+      if (!existingNode) {
+        existingNode = {
+          name: part,
+          path: currentPath,
+          type: 'folder',
+          children: []
+        }
+        currentLevel.push(existingNode)
+      }
+      currentLevel = existingNode.children!
+    }
+    
+    // 파일 추가
+    const filePath = relativePath ? `${relativePath}/${fileNameWithoutExt}` : fileNameWithoutExt
+    currentLevel.push({
+      name: fileNameWithoutExt,
+      path: filePath,
+      type: 'file',
+      slug: filePath
+    })
+  }
+  
+  // 정렬: 폴더 먼저, 그 다음 파일
+  const sortTree = (nodes: TreeNode[]): TreeNode[] => {
+    return nodes.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'folder' ? -1 : 1
+      }
+      return a.name.localeCompare(b.name)
+    }).map(node => ({
+      ...node,
+      children: node.children ? sortTree(node.children) : undefined
+    }))
+  }
+  
+  return sortTree(tree)
+}
