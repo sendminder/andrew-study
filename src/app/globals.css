@@ -28,7 +28,9 @@ body {
 
 /* 마크다운 콘텐츠 스타일링 */
 .markdown-content {
-  line-height: 1.8;
+  line-height: 1.7;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .markdown-content h1,
@@ -38,17 +40,17 @@ body {
 .markdown-content h5,
 .markdown-content h6 {
   font-weight: 700;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
   line-height: 1.3;
 }
 
 .markdown-content h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 .markdown-content h2 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   border-bottom: 2px solid #e5e5e5;
   padding-bottom: 0.5rem;
 }
@@ -59,6 +61,31 @@ body {
 
 .markdown-content h4 {
   font-size: 1.25rem;
+}
+
+/* 모바일에서 더 큰 헤딩 */
+@media (min-width: 640px) {
+  .markdown-content h1 {
+    font-size: 2.5rem;
+  }
+
+  .markdown-content h2 {
+    font-size: 2rem;
+  }
+
+  .markdown-content {
+    line-height: 1.8;
+  }
+
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3,
+  .markdown-content h4,
+  .markdown-content h5,
+  .markdown-content h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
 }
 
 .markdown-content p {
@@ -84,15 +111,26 @@ body {
 
 .markdown-content pre {
   background-color: #f8f8f8;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
   overflow-x: auto;
   margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown-content pre code {
   background-color: transparent;
   padding: 0;
+  font-size: inherit;
+}
+
+/* 모바일에서 코드 블록 개선 */
+@media (min-width: 640px) {
+  .markdown-content pre {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
 }
 
 .markdown-content blockquote {
