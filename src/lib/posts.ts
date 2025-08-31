@@ -62,7 +62,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
   const postPaths = getAllPostPaths()
   const posts: PostMeta[] = []
   
-  for (const { fullPath, category, subcategory, fileName } of postPaths) {
+  for (const { fullPath, relativePath, fileName } of postPaths) {
     const fileContents = fs.readFileSync(fullPath, 'utf8')
     const { data, content } = matter(fileContents)
     
@@ -70,8 +70,16 @@ export async function getAllPosts(): Promise<PostMeta[]> {
     const title = data.title || slug.replace(/^\d+\./, '').replace(/-/g, ' ')
     const excerpt = data.excerpt || content.slice(0, 200) + '...'
     
+    // 경로에서 카테고리와 하위카테고리 추출
+    const pathParts = relativePath.split('/').filter(Boolean)
+    const category = pathParts[0] || 'uncategorized'
+    const subcategory = pathParts.length > 1 ? pathParts.slice(1).join('/') : undefined
+    
+    // 슬러그 생성: relativePath + fileName (확장자 제거)
+    const fullSlug = relativePath ? `${relativePath}/${slug}` : slug
+    
     posts.push({
-      slug: subcategory ? `${category}/${subcategory}/${slug}` : `${category}/${slug}`,
+      slug: fullSlug,
       title,
       date: data.date,
       category,
@@ -92,11 +100,12 @@ export async function getPostBySlug(slug: string): Promise<PostData | null> {
   try {
     const slugParts = slug.split('/')
     const fileName = slugParts.pop() + '.md'
-    const categoryPath = slugParts.join('/')
+    const directoryPath = slugParts.join('/')
     
-    const fullPath = path.join(postsDirectory, categoryPath, fileName)
+    const fullPath = path.join(postsDirectory, directoryPath, fileName)
     
     if (!fs.existsSync(fullPath)) {
+      console.log('File not found:', fullPath)
       return null
     }
     
@@ -111,8 +120,11 @@ export async function getPostBySlug(slug: string): Promise<PostData | null> {
     const contentHtml = processedContent.toString()
     
     const title = data.title || fileName.replace(/\.md$/, '').replace(/^\d+\./, '').replace(/-/g, ' ')
-    const category = slugParts[0] || ''
-    const subcategory = slugParts[1] || undefined
+    
+    // 경로에서 카테고리와 하위카테고리 추출
+    const pathParts = directoryPath.split('/').filter(Boolean)
+    const category = pathParts[0] || 'uncategorized'
+    const subcategory = pathParts.length > 1 ? pathParts.slice(1).join('/') : undefined
     
     return {
       slug,
@@ -136,6 +148,14 @@ export async function getPostsByCategory(category: string): Promise<PostMeta[]> 
 
 export function getCategories(): string[] {
   const postPaths = getAllPostPaths()
-  const categories = new Set(postPaths.map(p => p.category))
+  const categories = new Set<string>()
+  
+  for (const { relativePath } of postPaths) {
+    const pathParts = relativePath.split('/').filter(Boolean)
+    if (pathParts.length > 0) {
+      categories.add(pathParts[0])
+    }
+  }
+  
   return Array.from(categories)
 }
